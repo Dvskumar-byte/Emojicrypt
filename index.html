@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EmojiCrypt 🔐</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Login/Register Container -->
+  <div class="container" id="container">
+    <div class="form-container sign-up">
+      <form onsubmit="handleSignup(event)">
+        <h1>Create Account</h1>
+        <input type="text" id="signupName" placeholder="Name (used as username)" required />
+        <input type="email" id="signupEmail" placeholder="Email" required />
+        <input type="password" id="signupPassword" placeholder="Password" required />
+        <button type="submit">Sign Up</button>
+      </form>
+    </div>
+    <div class="form-container sign-in">
+      <form onsubmit="handleLogin(event)">
+        <h1>Sign in</h1>
+        <input type="email" id="loginEmail" placeholder="Email" required />
+        <input type="password" id="loginPassword" placeholder="Password" required />
+        <button type="submit">Sign In</button>
+      </form>
+    </div>
+    <div class="toggle-container">
+      <div class="toggle">
+        <div class="toggle-panel toggle-left">
+          <h1>Welcome Back!</h1>
+          <p>Already have an account? Sign in here</p>
+          <button class="hidden" id="login">Sign In</button>
+        </div>
+        <div class="toggle-panel toggle-right">
+          <h1>Hello, Friend!</h1>
+          <p>New here? Create your account now</p>
+          <button class="hidden" id="register">Sign Up</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Interface -->
+  <div id="app" style="display: none;">
+    <div class="top-right-icons">
+      <div class="user-info">
+        <span id="userEmail">👤</span>
+        <button onclick="handleLogout()">Logout</button>
+      </div>
+      <span class="notification-icon" onclick="handleNotification()">🔔</span>
+      <span class="messenger-icon" onclick="handleMessenger()">📩</span>
+      <span class="toggle-dark" onclick="toggleDarkMode()">🌙</span>
+    </div>
+
+    <h1>🔐 EmojiCrypt</h1>
+
+    <div class="flex-container">
+      <!-- Encryption Panel -->
+      <div class="panel">
+        <label>Enter Message:</label>
+        <textarea id="messageInput" rows="3" placeholder="Type your message..."></textarea>
+
+        <label>Password:</label>
+        <input type="password" id="passwordInput" placeholder="Enter password" />
+
+        <label>Select Emoji Style:</label>
+        <select id="styleSelect" onchange="toggleCustomInput()">
+          <option value="love">Love ❤️</option>
+          <option value="animals">Animals 🐶</option>
+          <option value="halloween">Halloween 🎃</option>
+          <option value="food">Food 🍔</option>
+          <option value="alphabet">Alphabet</option>
+          <option value="digits">Digits</option>
+          <option value="symbols">Symbols</option>
+          <option value="custom">Custom</option>
+        </select>
+
+        <textarea id="customSetInput" placeholder="Paste your custom emojis/symbols here..." style="display:none;"></textarea>
+
+        <button onclick="encrypt()">Encrypt</button>
+        <div id="encryptedOutput"></div>
+
+        <!-- Send to User Feature -->
+        
+        
+      </div>
+
+      <!-- Decryption Panel -->
+      <div class="panel">
+        <label>Paste Secret Code:</label>
+        <textarea id="decryptInput" rows="3" placeholder="Paste secret code here..."></textarea>
+
+        <label>Password:</label>
+        <input type="password" id="decryptPassword" placeholder="Enter password" />
+
+        <label>Style Used:</label>
+        <select id="decryptStyle" onchange="toggleCustomInput(true)">
+          <option value="love">Love ❤️</option>
+          <option value="animals">Animals 🐶</option>
+          <option value="halloween">Halloween 🎃</option>
+          <option value="food">Food 🍔</option>
+          <option value="alphabet">Alphabet</option>
+          <option value="digits">Digits</option>
+          <option value="symbols">Symbols</option>
+          <option value="custom">Custom</option>
+        </select>
+
+        <textarea id="customSetDecrypt" placeholder="Paste your custom emojis/symbols here..." style="display:none;"></textarea>
+        <button onclick="decrypt()">Decrypt</button>
+        <div id="decryptedOutput"></div>
+      </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal" style="display:none;">
+      <div id="notificationContent" class="modal-content">
+        <p>No notifications yet!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Modal -->
+<div id="messageModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span onclick="closeMessenger()" style="float:right; cursor:pointer;">❌</span>
+    <h3>Send Message to User</h3>
+    <input type="text" id="recipientUsername" placeholder="Recipient Username" />
+    <button onclick="sendMessage()">Send Encrypted Message</button>
+    <p id="messageStatus" style="color: red; margin-top: 10px;"></p>
+  </div>
+</div>
+
+  <!-- Firebase Auth & Init -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signOut, onAuthStateChanged, updateProfile
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, doc, setDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCCeSlHT0emNL4iaHv0tSgG2eZbymdlVxA",
+      authDomain: "emojicrypt-c405e.firebaseapp.com",
+      projectId: "emojicrypt-c405e",
+      storageBucket: "emojicrypt-c405e.appspot.com",
+      messagingSenderId: "491952493947",
+      appId: "1:491952493947:web:e6741348cd787597c099de",
+      databaseURL: "https://emojicrypt-c405e-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
+
+    window.handleSignup = async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value;
+      const password = document.getElementById("signupPassword").value;
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await updateProfile(user, { displayName: name });
+
+        await setDoc(doc(firestore, "users", name), {
+          name,
+          email,
+          password, // Don't store plain passwords in real apps
+          uid: user.uid,
+          createdAt: serverTimestamp()
+        });
+
+        alert("Signup successful!");
+      } catch (error) {
+        alert("Signup error: " + error.message);
+      }
+    };
+
+    window.handleLogin = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(firestore, "logins", email), {
+          email,
+          loginTime: serverTimestamp()
+        });
+
+        alert("Login successful!");
+      } catch (error) {
+        alert("Login error: " + error.message);
+      }
+    };
+
+    window.handleLogout = async () => {
+      try {
+        await signOut(auth);
+        alert("Logged out successfully");
+        document.getElementById("app").style.display = "none";
+        document.getElementById("container").style.display = "block";
+      } catch (error) {
+        alert("Logout error: " + error.message);
+      }
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("container").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        document.getElementById("userEmail").textContent = "👤 " + (user.displayName || user.email);
+
+      } else {
+        document.getElementById("app").style.display = "none";
+        document.getElementById("container").style.display = "block";
+      }
+    });
+
+    window.auth = auth;
+    window.firestore = firestore;
+  </script>
+
+  <!-- Main Logic Script -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
