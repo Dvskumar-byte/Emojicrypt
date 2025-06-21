@@ -5,12 +5,9 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth
 
 // ✅ Emoji Sets
 const sets = {
-  love: ['❤️','💕','💖','💘','💝','💓','💞','❣️','😘','😍','🥰','💗','🫶','💟','💌','👩‍❤️‍👨'],
   animals: ['🐶','🐱','🦊','🐻','🐼','🦁','🐯','🐸','🐷','🐮','🐵','🦄','🐔','🐧','🐦','🐢'],
-  halloween: ['🎃','👻','🕷️','🧛','🧟','☠️','💀','⚰️','🕸️','🔮','🧙','🩸','🪦','🌕','🦇','🪓'],
   food: ['🍔','🍕','🌭','🍿','🍩','🍪','🍫','🍓','🍇','🍉','🥭','🍎','🍋','🍟','🥪','🥤'],
   alphabet: [...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-  digits: [...'0123456789'],
   symbols: ['@','#','$','%','&','*','!','?','^','~','+','=','-','/','(',')']
 };
 
@@ -37,19 +34,10 @@ function shuffleSet(set, password) {
 }
 
 function getSet(style, password, isDecrypt = false) {
-  if (style === 'custom') {
-    const customInput = isDecrypt ? document.getElementById("customSetDecrypt").value : document.getElementById("customSetInput").value;
-    return shuffleSet([...customInput], password);
-  }
   const baseSet = sets[style] || sets.love;
   return shuffleSet(baseSet, password);
 }
 
-function toggleCustomInput(isDecrypt = false) {
-  const style = isDecrypt ? document.getElementById("decryptStyle").value : document.getElementById("styleSelect").value;
-  const inputBox = isDecrypt ? document.getElementById("customSetDecrypt") : document.getElementById("customSetInput");
-  inputBox.style.display = (style === 'custom') ? "block" : "none";
-}
 
 // ✅ Encrypt Function
 async function encrypt() {
@@ -265,7 +253,6 @@ loginBtn.addEventListener("click", () => {
 // ✅ Expose to window
 window.encrypt = encrypt;
 window.decrypt = decrypt;
-window.toggleCustomInput = toggleCustomInput;
 window.copyText = copyText;
 window.copyFromNotif = copyFromNotif;
 window.toggleDarkMode = toggleDarkMode;
